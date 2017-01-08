@@ -1,0 +1,21 @@
+{
+	"name": "elbiniou-ppp",
+	"description": "PHP classes for generating PHP classes",
+	"repositories": [
+	],
+	"require":
+	{
+	},
+	"require-dev": {
+	},
+	"config": {
+		"process-timeout": 600
+	},
+	"autoload": {
+		"psr-4": {
+			"PPP\\": "source/class"
+		},
+		"files": [
+		]
+	}
+}
