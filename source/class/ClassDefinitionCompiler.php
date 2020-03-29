@@ -2,77 +2,78 @@
 
 
 namespace PPP;
-use \ReflectionFunction;
 
+use \ReflectionFunction;
 
 
 class ClassDefinitionCompiler
 {
 
-	protected $code='';
-	protected $classDefinition;
+    protected $code = '';
+    protected $classDefinition;
 
-	protected $extend=null;
-	protected $methods=array();
-	protected $traits=array();
-
-
-	public function __construct($classDefinition) {
-		$this->classDefinition=$classDefinition;
-
-		$this->methods=$this->classDefinition->getMethods();
-		$this->extend=$this->classDefinition->getExtend();
-		$this->traits=$this->classDefinition->getTraits();
-	}
+    protected $extend = null;
+    protected $methods = array();
+    protected $traits = array();
 
 
+    public function __construct($classDefinition)
+    {
+        $this->classDefinition = $classDefinition;
+    }
 
 
-	public function compile() {
-		$extend='';
-		if($this->extend) {
-			$extend=' extends '.$this->extend.' ';
-		}
+    public function compile()
+    {
+
+        $this->methods = $this->classDefinition->getMethods();
+        $this->extend = $this->classDefinition->getExtend();
+        $this->traits = $this->classDefinition->getTraits();
+
+        $extend = '';
+        if ($this->extend) {
+            $extend = ' extends ' . $this->extend . ' ';
+        }
 
 
-		$traitBuffer='';
-		foreach ($this->traits as $name=>$descriptor) {
-			$traitBuffer.='use '.$name;
+        $traitBuffer = '';
+        foreach ($this->traits as $name => $descriptor) {
+            $traitBuffer .= 'use ' . $name;
 
 
-			$traitBuffer.=';';
-		}
+            $traitBuffer .= ';';
+        }
 
 
-		$methodString='';
-		foreach ($this->methods as $name => $descriptor) {
+        $methodString = '';
+        foreach ($this->methods as $name => $descriptor) {
 
-			$callback=$descriptor['callback'];
-			$reflector=new ReflectionFunction($callback);
-			$parameters=$reflector->getParameters();
+            $callback = $descriptor['callback'];
+            $reflector = new ReflectionFunction($callback);
+            $parameters = $reflector->getParameters();
 
-			$parameterString='';
-			foreach ($parameters as $parameter) {
-				$parameterString.=$this->compileParameter($parameter);
-				$parameterString.=',';
-			}
-			if($parameterString) {
-				$parameterString=substr($parameterString, 0, -1);
-			}
+            $parameterString = '';
+            foreach ($parameters as $parameter) {
+                $parameterString .= $this->compileParameter($parameter);
+                $parameterString .= ',';
+            }
+            if ($parameterString) {
+                $parameterString = substr($parameterString, 0, -1);
+            }
 
-			$methodString.='    '.$descriptor['visibility'].' function '.$name.' ('.$parameterString.') {
+            $methodString .= '    ' . $descriptor['visibility'] . ' function ' . $name . ' (' . $parameterString . ') {
 				return call_user_func_array(
-					array($this->methods["'.$name.'"], "__invoke"),
+					array($this->methods["' . $name . '"], "__invoke"),
 					func_get_args()
 				);
             }
             ';
-		}
+        }
 
 
-		$code='
-            $instance=new Class '.$extend.'{
-                '.$traitBuffer.'
+        $code = '
+            $instance = new Class ' . $extend . '{
+                ' . $traitBuffer . '
                 protected $methods=array();
                 
                 public function ___setMethod($name, $callback) {
@@ -80,58 +81,60 @@ class ClassDefinitionCompiler
                     return $this;
                 }
                 
-                '.$methodString.'
+                ' . $methodString . '
             };
         ';
-		$this->code=$code;
-		return $this;
-	}
+        $this->code = $code;
+        return $this;
+    }
 
 
-	public function getCode() {
-		if(!$this->code) {
-			$this->compile();
-		}
-		return $this->code;
-	}
+    public function getCode()
+    {
+        if (!$this->code) {
+            $this->compile();
+        }
+        return $this->code;
+    }
 
-	public function getInstance() {
-		$instance=null;
-		eval($this->getCode());
+    public function getInstance()
+    {
+		$instance = null;
 
-		foreach ($this->methods as $name => $descriptor) {
-			$instance->___setMethod($name, $descriptor['callback']);
-		}
-		return $instance;
-	}
+        eval($this->getCode());
 
-
-
-
-	protected function compileParameter($parameter) : string {
-
-		$parameterString='$'.$parameter->name;
+        foreach ($this->methods as $name => $descriptor) {
+            $instance->___setMethod($name, $descriptor['callback']);
+        }
+        return $instance;
+    }
 
 
-		// && $parameter->getDefaultValue()
-		if($parameter->isOptional()) {
+    protected function compileParameter($parameter): string
+    {
 
-			$defaultValue=$parameter->getDefaultValue();
+        $parameterString = '$' . $parameter->name;
 
-			if(is_string($defaultValue)) {
-				$parameterString.='='."'".$defaultValue."'";
-			}
-			else if(is_array($defaultValue)) {
 
-				$parameterString.='='.var_export($defaultValue, true);
-			}
-			else {
-				$parameterString.='='.$defaultValue;
-			}
-		}
+        // && $parameter->getDefaultValue()
+        if ($parameter->isOptional()) {
 
-		return $parameterString;
-	}
+            $defaultValue = $parameter->getDefaultValue();
+
+            if (is_string($defaultValue)) {
+                $parameterString .= '=' . "'" . $defaultValue . "'";
+            }
+            else if (is_array($defaultValue)) {
+
+                $parameterString .= '=' . var_export($defaultValue, true);
+            }
+            else {
+                $parameterString .= '=' . $defaultValue;
+            }
+        }
+
+        return $parameterString;
+    }
 
 }
 

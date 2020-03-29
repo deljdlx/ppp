@@ -1,7 +1,7 @@
 <?php
 
 
-require(__DIR__.'/../vendor/autoload.php');
+require(__DIR__.'/../source/autoload.php');
 
 
 
@@ -13,49 +13,72 @@ class Test
 	}
 
 	public function hello() {
-		echo 'hello world';
+		return 'hello';
 	}
 }
 
-Trait Yolo
+Trait World
 {
-	public function toto() {
-		return 'toto';
+	public function world() {
+		return 'world';
 	}
 }
-
 
 //=======================================================
 
+$definition = new PPP\ClassDefinition();
 
-
-$definition=new PPP\ClassDefinition();
 $definition->extend('Test');
+$definition->addTrait('World');
 
-$definition->addTrait('Yolo');
 
-$definition->addMethod('yolo', function(string $string='hello world', $test=array('toto')) {
+
+$definition->addMethod('say', function(string $string='hello world', $test=array('toto')) {
 	return $string.' '.implode(' : ', $test);
 });
 
-
-
 $instance=$definition->getInstance();
 
+echo "===========================================\n";
+echo "Source code" . PHP_EOL;
+echo $definition->getCode();
+echo PHP_EOL;
 
 
-echo '<pre id="' . __FILE__ . '-' . __LINE__ . '" style="border: solid 1px rgb(255,0,0); background-color:rgb(255,255,255)">';
-echo '<div style="background-color:rgba(100,100,100,1); color: rgba(255,255,255,1)">' . __FILE__ . '@' . __LINE__ . '</div>';
-print_r($instance->yolo());
-echo '</pre>';
+
+echo "===========================================\n";
+echo "Test hello method from class Test" . PHP_EOL;
+echo $instance->hello();
+echo PHP_EOL;
 
 
+echo "===========================================\n";
+echo "Test world method from trait World" . PHP_EOL;
+echo $instance->world();
+echo PHP_EOL;
+
+echo "===========================================\n";
+echo "Test hello() world()" . PHP_EOL;
+echo $instance->hello(), ' ', $instance->world();
+echo PHP_EOL;
+
+echo "===========================================\n";
+echo "Test say dynamic method" . PHP_EOL;
+echo $instance->say('Say my name !');
+echo PHP_EOL;
+
+
+echo "===========================================\n";
+echo "Is intance of Test ?" . PHP_EOL;
 if($instance instanceof Test) {
-	echo '<pre id="' . __FILE__ . '-' . __LINE__ . '" style="border: solid 1px rgb(255,0,0); background-color:rgb(255,255,255)">';
-	echo '<div style="background-color:rgba(100,100,100,1); color: rgba(255,255,255,1)">' . __FILE__ . '@' . __LINE__ . '</div>';
-	print_r("ok instance of test");
-	echo '</pre>';
+	print_r("True instance of Test");
+	echo PHP_EOL;
 }
+
+echo "===========================================\n";
+echo "Is intance of World ?" . PHP_EOL;
+print_r(class_uses($instance));
+echo PHP_EOL;
 
 
 
